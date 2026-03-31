@@ -118,12 +118,12 @@
 }
 
 .welcome-logo {
-  width: 48px;
-  height: 48px;
-  background: var(--accent);
-  border-radius: 14px;
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
   box-shadow: 0 0 32px rgba(74,158,255,0.2), 0 4px 16px rgba(0,0,0,0.3);
   animation: logo-glow 3s ease-in-out infinite alternate;
+  display: block;
 }
 
 @keyframes logo-glow {

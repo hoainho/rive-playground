@@ -116,7 +116,12 @@ function ViewModelNode({
           >
             <TypeBadge type="viewModel" />
             <span>{prop.name}</span>
-            <span className="vm-toggle-icon">{expanded ? "▾" : "▸"}</span>
+            <span className="vm-toggle-icon">
+              {expanded
+                ? <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+                : <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M10 7l5 5-5 5z"/></svg>
+              }
+            </span>
           </button>
           {expanded && prop.children && prop.children.length > 0 && (
             <div className="vm-children">
@@ -133,7 +138,7 @@ function ViewModelNode({
           <TypeBadge type={prop.type} />
           <div className="control-row">
             <label className="control-label">{prop.name}</label>
-            <span className="info-value">{String(prop.value ?? "—")}</span>
+            <span className="info-value">{String(prop.value ?? "-")}</span>
           </div>
         </div>
       );
@@ -145,7 +150,10 @@ export function ViewModelPanel({ properties, onSetProp }: Props) {
 
   return (
     <div className="panel">
-      <div className="panel-header">🔧 ViewModel</div>
+      <div className="panel-header">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        ViewModel
+      </div>
       <div className="panel-body">
         {properties.map((prop) => (
           <ViewModelNode key={prop.path} prop={prop} onSetProp={onSetProp} />

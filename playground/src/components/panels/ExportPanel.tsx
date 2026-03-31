@@ -70,7 +70,7 @@ function toMarkdown(state: PlaygroundState): string {
     lines.push(`| Name | Type | Value |`);
     lines.push(`|------|------|-------|`);
     for (const inp of data.inputs) {
-      const val = inp.value === null ? "—" : String(inp.value);
+      const val = inp.value === null ? "-" : String(inp.value);
       lines.push(`| ${inp.name} | ${inp.type} | ${val} |`);
     }
   }
@@ -93,7 +93,7 @@ function toMarkdown(state: PlaygroundState): string {
     lines.push(`| Name | Type | Value |`);
     lines.push(`|------|------|-------|`);
     for (const p of data.viewModelProperties) {
-      lines.push(`| ${p.name} | ${p.type} | ${p.value ?? "—"} |`);
+      lines.push(`| ${p.name} | ${p.type} | ${p.value ?? "-"} |`);
     }
   }
 
@@ -141,7 +141,10 @@ export function ExportPanel({ state }: Props) {
 
   return (
     <div className="panel">
-      <div className="panel-header">📤 Export</div>
+      <div className="panel-header">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Export
+      </div>
       <div className="panel-body">
         <div className="export-row">
           <span className="control-label">JSON</span>
@@ -150,7 +153,7 @@ export function ExportPanel({ state }: Props) {
               className={`export-btn ${copied === "json" ? "copied" : ""}`}
               onClick={() => handleCopy("json")}
             >
-              {copied === "json" ? "✓ Copied" : "Copy"}
+              {copied === "json" ? "Copied" : "Copy"}
             </button>
             <button
               className="export-btn"
@@ -167,7 +170,7 @@ export function ExportPanel({ state }: Props) {
               className={`export-btn ${copied === "md" ? "copied" : ""}`}
               onClick={() => handleCopy("md")}
             >
-              {copied === "md" ? "✓ Copied" : "Copy"}
+              {copied === "md" ? "Copied" : "Copy"}
             </button>
             <button
               className="export-btn"

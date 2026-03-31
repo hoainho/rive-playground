@@ -12,9 +12,9 @@ function formatDuration(seconds: number): string {
 }
 
 function artboardLabel(ab: ArtboardInfo): string {
-  const prefix = ab.isDefault ? "★ " : "";
+  const prefix = ab.isDefault ? "[default] " : "";
   const dims =
-    ab.width > 0 || ab.height > 0 ? ` (${ab.width}×${ab.height})` : "";
+    ab.width > 0 || ab.height > 0 ? ` (${ab.width}x${ab.height})` : "";
   return `${prefix}${ab.name}${dims}`;
 }
 
@@ -27,7 +27,10 @@ export function ArtboardPanel({
 
   return (
     <div className="panel">
-      <div className="panel-header">📋 Artboard</div>
+      <div className="panel-header">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Artboard
+      </div>
       <div className="panel-body">
         <div className="control-row">
           <label className="control-label">Artboard</label>
@@ -48,7 +51,7 @@ export function ArtboardPanel({
           <div className="info-block">
             <span className="info-label">Size:</span>
             <span className="info-value">
-              {currentAb.width} × {currentAb.height}
+              {currentAb.width} x {currentAb.height}
             </span>
           </div>
         )}

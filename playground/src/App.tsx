@@ -64,7 +64,7 @@ export default function App() {
         <div className="welcome-screen">
           <div className="welcome-card">
             <div className="welcome-brand">
-              <div className="welcome-logo" />
+              <img src="/logo.svg" className="welcome-logo" alt="Rive Playground" />
               <h1 className="welcome-title">Rive Playground</h1>
               <p className="welcome-subtitle">
                 Inspect, control, and export Rive animations in real-time
