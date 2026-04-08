@@ -1,12 +1,48 @@
 # Rive Playground
 
-Inspect, validate, and control Rive `.riv` animation files — from the terminal, AI assistants, or a visual playground.
+**v1.1.0 — "Living Canvas"**
 
-Provides a **CLI tool**, **MCP server** (for AI assistants like Claude), and a **Playground** (visual editor with real-time ViewModel controls).
+> *Where your animation goes from a file to a living product.*
 
-## Why
+Inspect, validate, control, and ship Rive `.riv` animation files — from the terminal, AI assistants, or a visual playground. The complete toolchain for teams that build with Rive at scale.
 
-Rive `.rev` project files are editor-only and can't be parsed externally. This tool uses the official `@rive-app/canvas` WASM runtime headlessly (via `node-canvas` + `jsdom`) to extract full metadata from compiled `.riv` files: artboards, state machines, inputs, animations.
+---
+
+## What's New in v1.1.0 — "Living Canvas"
+
+| Area | Feature |
+|------|---------|
+| Parser | Animation `loopType` — oneShot / loop / pingPong |
+| Parser | `workStart` / `workEnd` frame range per animation |
+| Parser | ViewModel extraction — real data from `viewModelCount()` / `getProperties()` |
+| Parser | DataEnum extraction — full enum names and values |
+| CLI | `list-assets` — enumerate embedded/CDN images, fonts, audio |
+| CLI | `init` — scaffold `.rive-playground/` project directory |
+| CLI | `contract-generate` — generate `.rive-contract.yaml` from .riv |
+| CLI | `contract-validate` — validate .riv against contract (CI-friendly) |
+| CLI | `generate-platform` — codegen for Swift, Kotlin, JSON Schema, Zod, Dart |
+| CLI | `compare` — diff two .riv files, detect breaking changes |
+| MCP | 5 new tools: `list-rive-assets`, `generate-rive-contract`, `validate-rive-contract`, `generate-platform-types`, `compare-rive-files` |
+| Playground | Events Log Panel — real-time Rive event stream |
+| Playground | Preset Library — save/load/apply named configurations |
+| Playground | URL deep-linking — `?file=<url>&artboard=Main&sm=...` |
+| Playground | Keyboard shortcuts — Space play/pause, R reset, Ctrl+S save preset |
+| Playground | Error toasts — surface silent failures visually |
+| Infra | Vitest test suite (16 tests) |
+| Infra | `.rive-playground/` project config directory |
+
+---
+
+## Overview
+
+```
+rive-analyzer CLI     Terminal-first inspection, codegen, validation
+MCP Server            AI assistant integration (Claude, OpenCode)
+Rive Playground       Visual editor + preset library + event log
+.rive-playground/     Project config — presets, contracts (git-trackable)
+```
+
+---
 
 ## Installation
 
@@ -14,134 +50,108 @@ Rive `.rev` project files are editor-only and can't be parsed externally. This t
 cd /path/to/rive-mcp-analyzer
 npm install
 npm run build
+npm link           # optional: global CLI install
 ```
 
-### Global CLI install (optional)
+---
 
-```bash
-npm link
-rive-analyzer --help
-```
-
-## CLI Usage
-
-```bash
-node dist/cli.js <command> [options]
-```
+## CLI Reference
 
 ### inspect
-
-Parse a `.riv` file and list all artboards, state machines, inputs, and animations.
-
 ```bash
-node dist/cli.js inspect ./animation.riv
-node dist/cli.js inspect ./animation.riv --json
-```
-
-**Output example:**
-
-```
-File: /path/to/animation.riv
-Size: 57.4 KB
-Rive version: 7.0
-Parse method: wasm
-
-Artboards (1):
-  ★ Main (1920×1080)
-    Animations (3):
-      - idle (0.00s @ 60fps)
-    State Machines (1):
-      - Main SM
-          [boolean] isVisible
-          [trigger] RESET
-          [number] speed
+rive-analyzer inspect ./animation.riv
+rive-analyzer inspect ./animation.riv --json
 ```
 
 ### scan
-
-Recursively find and inspect all `.riv` files in a directory.
-
 ```bash
-node dist/cli.js scan ./public/
-node dist/cli.js scan ./public/ --json
+rive-analyzer scan ./public/
 ```
 
 ### validate
-
-Compare a `.riv` file's metadata against a JS/TS constants file that references artboard/SM names.
-
 ```bash
-node dist/cli.js validate ./animation.riv ./src/constants/rive.js
+rive-analyzer validate ./animation.riv ./src/constants/rive.ts
 ```
-
-**Output example:**
-
-```
-Artboards:
-  ✓ "Main" — match
-  ✗ "MainBoard" — missing_in_riv
-
-State Machines:
-  ✓ "Main SM" — match
-  ~ "Old SM" — extra_in_config
-
-✗ INVALID
-1 value(s) referenced in config but not found in .riv file.
-```
-
-Exits with code 1 if validation fails — useful in CI pipelines.
 
 ### generate-types
-
-Auto-generate TypeScript constants from `.riv` metadata.
-
 ```bash
-node dist/cli.js generate-types ./animation.riv
-node dist/cli.js generate-types ./animation.riv --output ./src/types/rive-generated.ts
+rive-analyzer generate-types ./animation.riv -o ./src/rive-generated.ts
 ```
 
-**Generated output:**
+### generate-platform
+```bash
+rive-analyzer generate-platform ./animation.riv --target swift
+rive-analyzer generate-platform ./animation.riv --target kotlin -o RiveConstants.kt
+rive-analyzer generate-platform ./animation.riv --target json-schema
+rive-analyzer generate-platform ./animation.riv --target zod
+rive-analyzer generate-platform ./animation.riv --target dart
+```
 
-```typescript
-export const ANIMATION_ARTBOARDS = {
-  MAIN: "Main",
-} as const;
+### contract-generate
+```bash
+rive-analyzer contract-generate ./animation.riv -o .rive-playground/contracts/animation.yaml
+```
 
-export const ANIMATION_STATE_MACHINES = {
-  MAIN_SM: {
-    name: "Main SM",
-    inputs: {
-      IS_VISIBLE: { name: "isVisible", type: "boolean" as const },
-      RESET: { name: "RESET", type: "trigger" as const },
-    },
-  },
-} as const;
+Contract example:
+```yaml
+version: 1.1.0
+file: animation.riv
+artboard: Main
+stateMachine: Main SM
+inputs:
+  speed:
+    type: number
+    min: 0
+    max: 10
+    description: "Animation speed multiplier"
+  isVisible:
+    type: boolean
+  RESET:
+    type: trigger
+```
+
+### contract-validate
+```bash
+rive-analyzer contract-validate ./animation.riv ./animation.rive-contract.yaml
+# Exits 1 if: input removed, type changed, artboard renamed
+```
+
+### compare
+```bash
+rive-analyzer compare ./animation-v1.riv ./animation-v2.riv
+# Exits 1 on breaking changes — CI-safe
+```
+
+### list-assets
+```bash
+rive-analyzer list-assets ./animation.riv
+```
+
+### export-fields
+```bash
+rive-analyzer export-fields ./animation.riv --json
+```
+
+### init
+```bash
+rive-analyzer init
+# Creates: .rive-playground/{presets,contracts,schedules,config.json}
 ```
 
 ### watch
-
-Watch `.riv` files for changes and output a diff when they change.
-
 ```bash
-node dist/cli.js watch "./public/**/*.riv"
+rive-analyzer watch "./public/**/*.riv"
 ```
 
-Press `Ctrl+C` to stop.
+---
 
-## MCP Server Setup
-
-The MCP server exposes all 5 tools to AI assistants via stdio transport.
-
-### Start the server
+## MCP Server (11 tools)
 
 ```bash
 node dist/mcp.js
 ```
 
-### Add to Claude Desktop
-
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
-
+Add to Claude Desktop:
 ```json
 {
   "mcpServers": {
@@ -153,46 +163,21 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
-### Add to OpenCode
+| Tool | Description |
+|------|-------------|
+| `inspect-rive` | Parse .riv — artboards, SMs, animations |
+| `scan-rive-files` | Scan directory recursively |
+| `validate-rive-config` | Check JS/TS config against .riv |
+| `generate-rive-types` | TypeScript constants |
+| `watch-rive-files` | Watch for changes |
+| `export-rive-fields` | Deep extract ViewModels, DataEnums |
+| `list-rive-assets` | Enumerate embedded/CDN assets |
+| `generate-rive-contract` | Generate .rive-contract.yaml |
+| `validate-rive-contract` | Validate .riv against contract |
+| `generate-platform-types` | Swift/Kotlin/JSON Schema/Zod/Dart |
+| `compare-rive-files` | Diff two files, detect breaking changes |
 
-Edit your OpenCode MCP config or `AGENTS.md` to register the server.
-
-### Available MCP Tools
-
-| Tool                   | Description                                          |
-| ---------------------- | ---------------------------------------------------- |
-| `inspect-rive`         | Parse a `.riv` file, return artboards/SMs/animations |
-| `scan-rive-files`      | Scan directory, return all `.riv` file metadata      |
-| `validate-rive-config` | Check if JS/TS config matches `.riv` metadata        |
-| `generate-rive-types`  | Generate TypeScript type constants                   |
-| `watch-rive-files`     | Watch for changes for N seconds, return diff         |
-
-### Example AI conversation
-
-```
-You: Use inspect-rive on ./public/lobby.riv and tell me what state machine inputs are available
-
-AI: [calls inspect-rive tool]
-    The lobby.riv file has 1 artboard "Main" (1920×1080) with state machine "Main SM"
-    containing 3 inputs:
-    - isVisible (boolean, default: false)
-    - speed (number, default: 1)
-    - RESET (trigger)
-```
-
-## How It Works
-
-1. **Binary header**: Reads the `.riv` file to verify it's a valid Rive file and extract version info
-2. **WASM parsing**: Uses `@rive-app/canvas` WASM runtime with `node-canvas` + `jsdom` as a headless Canvas/DOM environment
-3. **Metadata extraction**: Calls `Rive.animationNames`, `Rive.stateMachineNames`, `Rive.stateMachineInputs()`, `Rive.bounds`
-4. **Graceful degradation**: If WASM fails (bad file, corrupt data), falls back to binary header info only
-
-## Limitations
-
-- **`.rev` files**: Rive Editor project files are NOT supported (editor-internal format, no public spec)
-- **Multiple artboards**: The Rive high-level API exposes the default artboard only; non-default artboards require the low-level WASM API (planned for future version)
-- **Animation duration**: The high-level API doesn't expose animation duration directly (shown as 0.00s)
-- **"No WebGL support"**: This message is expected — the tool uses Canvas 2D mode which is sufficient for metadata extraction
+---
 
 ## Playground
 
@@ -200,49 +185,97 @@ AI: [calls inspect-rive tool]
 cd playground
 npm install
 npm run dev
+# Open http://localhost:5173
 ```
 
-Open `http://localhost:5173` — drop a `.riv` file to start.
+### Panels
 
-### ViewModel Editing
+| Panel | What it does |
+|-------|-------------|
+| Artboard | Select artboard and animation |
+| State Machine | Live boolean/number/trigger controls |
+| ViewModel | All property types with live editing |
+| Text Runs | Edit text content, auto-discover from VMs |
+| Events | Real-time Rive event log |
+| Presets | Save / load / apply named configurations |
+| Export | JSON + Markdown export |
 
-| Type | Control | Badge |
-|------|---------|-------|
-| `boolean` | Toggle switch | 🔵 Blue |
-| `number` | Slider + input | 🟣 Purple |
-| `string` | Text input | 🟢 Green |
-| `trigger` | Fire button | 🟡 Amber |
-| `color` | Color picker | 🩷 Pink |
-| `enum` | Dropdown | 🩵 Cyan |
-| `image` | URL + upload | 🟠 Orange |
-| `viewModel` | Nested panel | 🟣 Purple |
+### Keyboard Shortcuts
 
-### Canvas Controls
+| Key | Action |
+|-----|--------|
+| `Space` | Play / Pause |
+| `R` | Reset animation |
+| `Ctrl/Cmd + S` | Save current state as preset |
+| `Ctrl + Scroll` | Zoom canvas |
+| `Alt + Drag` | Pan canvas |
+| `Alt + Double-click` | Reset view |
 
-| Action | Input |
-|--------|-------|
-| Zoom | `Ctrl/Cmd + Scroll` |
-| Pan | `Alt + Drag` |
-| Reset view | `Alt + Double-click` |
-| Rive interaction | Click / Hover (passthrough) |
-
-### Export
-
-Export configuration as JSON or Markdown for LiveOps/CSM transfer.
-
-## Architecture
+### URL Deep-linking
 
 ```
-.riv file
-  ├── CLI/MCP → @rive-app/canvas-advanced (Node.js WASM, zero native deps)
-  │               └→ rive.load() → file.artboardByIndex() → metadata
-  └── Playground → @rive-app/react-canvas (Browser WASM)
-                    ├→ useRive() → Canvas rendering + interaction
-                    ├→ rive.viewModelInstance → live property editing
-                    └→ @rive-app/canvas-advanced → metadata extraction
+http://localhost:5173?file=https://cdn.example.com/animation.riv&artboard=Main&sm=Main+SM
 ```
 
-## Requirements
+---
 
-- Node.js 18+
-- npm 8+
+## Rive Contract System
+
+The safety net between designers and developers. Define constraints on inputs — validate on every CI run.
+
+```bash
+# 1. Generate contract scaffold from .riv
+rive-analyzer contract-generate hero.riv -o .rive-playground/contracts/hero.yaml
+
+# 2. Edit: add min/max, required, descriptions
+# 3. Validate in CI
+rive-analyzer contract-validate hero.riv .rive-playground/contracts/hero.yaml
+```
+
+---
+
+## Project Structure
+
+```
+src/
+  cli.ts                      CLI (Commander + Clack, banner + NhoNH signature)
+  mcp.ts                      MCP server (11 tools)
+  parser/riveParser.ts        WASM headless parser
+  tools/
+    contract.ts               Contract system (YAML + Zod)
+    compareFiles.ts           Breaking change detection
+    generateMultiplatform.ts  Swift/Kotlin/JSON Schema/Zod/Dart codegen
+    listAssets.ts             Asset enumeration
+    exportFields.ts           ViewModel/DataEnum extraction
+    [inspect, scan, validate, generateTypes, watch].ts
+  ui/theme.ts                 CLI design system
+  ui/banner.ts                ASCII art + NhoNH signature
+
+playground/src/
+  hooks/useRivePlayground.ts  Core state + event capture
+  hooks/usePresets.ts         localStorage preset library
+  components/panels/
+    EventsPanel.tsx           Real-time event log
+    PresetsPanel.tsx          Save/load configurations
+  components/Toast.tsx        Error notifications
+  types.ts                    RiveEvent, Preset, PlaygroundState
+
+.rive-playground/             Git-trackable project config
+  presets/                    Named configuration snapshots
+  contracts/                  .rive-contract.yaml files
+  schedules/                  (v1.2.0)
+```
+
+---
+
+## Roadmap
+
+| Version | Theme | Highlights |
+|---------|-------|-----------|
+| v1.1.0 | **Living Canvas** | Contract system, multi-platform codegen, preset library, events |
+| v1.2.0 | **Living Server** | LiveConfig HTTP+WS, Config Scheduler, MCP-Playground bridge |
+| v1.3.0 | **Intelligence** | AI Narrator, AI Config Assistant (opt-in), SM Visual Graph |
+
+---
+
+*Built by [NhoNH](https://github.com/hoainho) · rive-analyzer · github.com/hoainho*

@@ -39,7 +39,8 @@ export function FileLoader({ onLoadBuffer, onLoadUrl, isLoading }: Props) {
 
   const handleUrlSubmit = useCallback(() => {
     const trimmed = url.trim();
-    if (trimmed && trimmed.endsWith(".riv")) {
+    const urlWithoutQuery = trimmed.split("?")[0].split("#")[0];
+    if (trimmed && urlWithoutQuery.toLowerCase().endsWith(".riv")) {
       onLoadUrl(trimmed);
       setUrl("");
     }
@@ -84,7 +85,10 @@ export function FileLoader({ onLoadBuffer, onLoadUrl, isLoading }: Props) {
             hidden
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) handleFile(file);
+              if (file) {
+                handleFile(file);
+                e.target.value = "";
+              }
             }}
           />
         </div>

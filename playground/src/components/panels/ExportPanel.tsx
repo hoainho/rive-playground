@@ -106,14 +106,16 @@ function download(content: string, filename: string, mime: string) {
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export function ExportPanel({ state }: Props) {
   const [copied, setCopied] = useState<"json" | "md" | null>(null);
 
-  const baseName = state.fileName.replace(/\.riv$/, "") || "rive-config";
+  const baseName = state.fileName.replace(/\.riv$/i, "") || "rive-config";
 
   const handleCopy = useCallback(
     (format: "json" | "md") => {
@@ -121,6 +123,8 @@ export function ExportPanel({ state }: Props) {
       navigator.clipboard.writeText(content).then(() => {
         setCopied(format);
         setTimeout(() => setCopied(null), 1500);
+      }).catch(() => {
+        setCopied(null);
       });
     },
     [state],

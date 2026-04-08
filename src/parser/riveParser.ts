@@ -47,7 +47,7 @@ type RiveRuntime = {
       animationCount(): number;
       animationByIndex(
         i: number,
-      ): { name: string; fps: number; duration: number };
+      ): { name: string; fps: number; duration: number; loopValue?: number; workStart?: number; workEnd?: number };
       stateMachineCount(): number;
       stateMachineByIndex(i: number): { name: string };
       delete(): void;
@@ -185,11 +185,17 @@ async function parseWithWasm(
           const anim = ab.animationByIndex(a);
           const fps = anim.fps || 60;
           const frameDuration = anim.duration || 0;
+          const loopVal = anim.loopValue ?? 0;
+          const loopType: AnimationMetadata["loopType"] =
+            loopVal === 1 ? "loop" : loopVal === 2 ? "pingPong" : "oneShot";
           animations.push({
             name: anim.name,
             fps,
             workDuration: frameDuration,
             duration: fps > 0 ? frameDuration / fps : 0,
+            loopType,
+            workStart: anim.workStart ?? 0,
+            workEnd: anim.workEnd ?? frameDuration,
           });
         }
 

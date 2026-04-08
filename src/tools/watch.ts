@@ -6,6 +6,7 @@ import type {
   RiveDiff,
   DiffChange,
 } from "../parser/types.js";
+import { colors, sym, brand } from "../ui/theme.js";
 
 type FileCache = Map<string, RiveFileMetadata>;
 
@@ -142,20 +143,35 @@ export function watchRiveFiles(
 
 export function formatDiff(diff: RiveDiff): string {
   const lines: string[] = [];
+
+  const time = new Date(diff.timestamp).toLocaleTimeString();
   lines.push(
-    `[${new Date(diff.timestamp).toLocaleTimeString()}] ${diff.filePath}`,
+    "  " + colors.muted(time) +
+    "  " + brand(diff.filePath.split("/").pop() ?? diff.filePath) +
+    "  " + colors.muted(diff.filePath.replace(/\/[^/]+$/, ""))
   );
 
   if (!diff.hasChanges) {
-    lines.push("  No changes detected.");
+    lines.push("  " + colors.muted("  no changes detected"));
     return lines.join("\n");
   }
 
   for (const change of diff.changes) {
     const icon =
-      change.type === "added" ? "+" : change.type === "removed" ? "-" : "~";
-    const detail = change.details ? ` (${change.details})` : "";
-    lines.push(`  ${icon} [${change.category}] ${change.name}${detail}`);
+      change.type === "added" ? sym.added :
+      change.type === "removed" ? sym.removed : sym.modified;
+    const catColor =
+      change.category === "artboard" ? colors.artboardDefault :
+      change.category === "state_machine" ? colors.info :
+      change.category === "input" ? colors.typeBoolean :
+      colors.secondary;
+    const detail = change.details ? "  " + colors.muted("(" + change.details + ")") : "";
+    lines.push(
+      "  " + icon +
+      "  " + catColor("[" + change.category + "]") +
+      "  " + colors.primary(change.name) +
+      detail
+    );
   }
 
   return lines.join("\n");

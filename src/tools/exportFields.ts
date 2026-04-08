@@ -12,6 +12,12 @@ const require = createRequire(import.meta.url);
 const SM_TYPE_NUMBER = 56;
 const SM_TYPE_BOOLEAN = 59;
 
+const VM_DATA_TYPE: Record<number, string> = {
+  0: "none", 1: "string", 2: "number", 3: "boolean", 4: "color",
+  5: "trigger", 6: "enumType", 7: "list", 8: "image", 9: "artboard",
+  10: "viewModel", 11: "integer", 12: "listIndex",
+};
+
 type RiveAny = Record<string, unknown>;
 
 type RiveRuntime = {
@@ -33,6 +39,11 @@ type RiveRuntime = {
   ): Promise<{
     artboardCount(): number;
     artboardByIndex(i: number): RiveAny;
+    viewModelCount?(): number;
+    viewModelByIndex?(i: number): RiveAny;
+    viewModelByName?(name: string): RiveAny;
+    dataEnumCount?(): number;
+    dataEnumByIndex?(i: number): RiveAny;
     delete(): void;
   } | null>;
 };
@@ -93,6 +104,79 @@ function resolveInputType(typeId: number): SMInputType {
   if (typeId === SM_TYPE_NUMBER) return "number";
   if (typeId === SM_TYPE_BOOLEAN) return "boolean";
   return "trigger";
+}
+
+function extractViewModels(file: RiveAny): import("../parser/types.js").ViewModelMetadata[] {
+  const result: import("../parser/types.js").ViewModelMetadata[] = [];
+  try {
+    const vmCount = (file["viewModelCount"] as (() => number) | undefined)?.() ?? 0;
+    for (let i = 0; i < vmCount; i++) {
+      const vm = (file["viewModelByIndex"] as ((i: number) => RiveAny) | undefined)?.(i);
+      if (!vm) continue;
+      const vmName = (vm["name"] as string | undefined) ?? `ViewModel${i}`;
+
+      const instanceNames: string[] = [];
+      try {
+        const rawNames = (vm["getInstanceNames"] as (() => string[]) | undefined)?.() ?? [];
+        instanceNames.push(...rawNames.filter(Boolean));
+      } catch {}
+
+      const properties: import("../parser/types.js").ViewModelPropertyMetadata[] = [];
+      try {
+        const rawProps = (vm["getProperties"] as (() => Array<{ name: string; type: number }>) | undefined)?.() ?? [];
+        for (const p of rawProps) {
+          const typeName = VM_DATA_TYPE[p.type] ?? "none";
+          const prop: import("../parser/types.js").ViewModelPropertyMetadata = {
+            name: p.name,
+            type: typeName as import("../parser/types.js").RiveFieldType,
+          };
+          try {
+            const inst = (vm["defaultInstance"] as (() => RiveAny | null) | undefined)?.()
+              ?? (vm["instanceByIndex"] as ((i: number) => RiveAny | null) | undefined)?.(0);
+            if (inst) {
+              const getter = inst[typeName === "enumType" ? "enum" : typeName] as ((n: string) => RiveAny | null) | undefined;
+              const propObj = getter?.call(inst, p.name);
+              if (propObj && "value" in propObj) {
+                prop.defaultValue = propObj["value"] as string | number | boolean;
+              }
+            }
+          } catch {}
+          properties.push(prop);
+        }
+      } catch {}
+
+      const enums: import("../parser/types.js").EnumMetadata[] = [];
+      result.push({ name: vmName, instanceNames, properties, enums });
+    }
+  } catch {}
+  return result;
+}
+
+function extractDataEnums(file: RiveAny): import("../parser/types.js").EnumMetadata[] {
+  const result: import("../parser/types.js").EnumMetadata[] = [];
+  try {
+    const enumCount = (file["dataEnumCount"] as (() => number) | undefined)?.() ?? 0;
+    for (let i = 0; i < enumCount; i++) {
+      const de = (file["dataEnumByIndex"] as ((i: number) => RiveAny) | undefined)?.(i);
+      if (!de) continue;
+      const name = (de["name"] as string | undefined) ?? `DataEnum${i}`;
+      const values: string[] = [];
+      try {
+        const valCount = (de["valueCount"] as (() => number) | undefined)?.() ?? 0;
+        for (let v = 0; v < valCount; v++) {
+          const val = (de["value"] as ((i: number) => string) | undefined)?.(v);
+          if (val) values.push(val);
+        }
+        if (values.length === 0) {
+          const rawVals = (de["values"] as string[] | undefined) ?? [];
+          values.push(...rawVals);
+        }
+      } catch {}
+      const currentValue = values[0] ?? "";
+      result.push({ name, currentValue, values });
+    }
+  } catch {}
+  return result;
 }
 
 export async function exportFields(
@@ -174,6 +258,9 @@ export async function exportFields(
         (ab["delete"] as (() => void) | undefined)?.();
       }
     }
+
+    result.viewModels = extractViewModels(file);
+    result.dataEnums = extractDataEnums(file);
 
     file.delete();
     return result;

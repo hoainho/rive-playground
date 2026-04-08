@@ -6,7 +6,7 @@ import { RiveCanvas } from "./components/RiveCanvas";
 import { Sidebar } from "./components/Sidebar";
 import { PlaybackPanel } from "./components/panels/PlaybackPanel";
 import { Toast } from "./components/Toast";
-import logoUrl from "/logo.svg";
+
 
 import "./App.css";
 
@@ -112,7 +112,7 @@ export default function App() {
         <div className="welcome-screen">
           <div className="welcome-card">
             <div className="welcome-brand">
-              <img src={logoUrl} className="welcome-logo" alt="Rive Playground" />
+              <img src={`${import.meta.env.BASE_URL}logo.svg`} className="welcome-logo" alt="Rive Playground" />
               <h1 className="welcome-title">Rive Playground</h1>
               <p className="welcome-subtitle">
                 Inspect, control, and export Rive animations in real-time

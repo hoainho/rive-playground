@@ -41,6 +41,26 @@ export interface ViewModelProperty {
   children?: ViewModelProperty[];
 }
 
+export interface RiveEvent {
+  id: number;
+  timestamp: string;
+  name: string;
+  type: "general" | "openUrl";
+  properties?: Record<string, unknown>;
+  url?: string;
+}
+
+export interface Preset {
+  id: string;
+  name: string;
+  artboard: string;
+  stateMachine: string;
+  inputs: Array<{ name: string; type: string; value: unknown }>;
+  viewModelProps: Array<{ path: string; type: string; value: unknown }>;
+  textRuns: Array<{ name: string; value: string }>;
+  createdAt: string;
+}
+
 export interface PlaygroundState {
   isLoaded: boolean;
   isLoading: boolean;
@@ -53,6 +73,7 @@ export interface PlaygroundState {
   smInputs: SMInput[];
   textRuns: TextRunEntry[];
   viewModelProps: ViewModelProperty[];
+  riveEvents: RiveEvent[];
 }
 
 export const SM_INPUT_NUMBER = 56;

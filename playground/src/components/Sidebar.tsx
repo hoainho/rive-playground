@@ -1,9 +1,11 @@
-import type { PlaygroundState } from "../types";
+import type { PlaygroundState, Preset } from "../types";
 import { ArtboardPanel } from "./panels/ArtboardPanel";
 import { StateMachinePanel } from "./panels/StateMachinePanel";
 import { TextRunPanel } from "./panels/TextRunPanel";
 import { ViewModelPanel } from "./panels/ViewModelPanel";
 import { ExportPanel } from "./panels/ExportPanel";
+import { EventsPanel } from "./panels/EventsPanel";
+import { PresetsPanel } from "./panels/PresetsPanel";
 
 interface Props {
   state: PlaygroundState;
@@ -14,6 +16,11 @@ interface Props {
   onSetViewModelProp: (path: string, type: string, value: string | number | boolean | ArrayBuffer) => void;
   onSetTextRun: (name: string, value: string) => void;
   onAddTextRun: (name: string) => void;
+  onClearEvents: () => void;
+  presets: Preset[];
+  onSavePreset: (name: string) => void;
+  onApplyPreset: (preset: Preset) => void;
+  onDeletePreset: (id: string) => void;
 }
 
 function SkeletonPanel() {
@@ -42,6 +49,11 @@ export function Sidebar({
   onSetViewModelProp,
   onSetTextRun,
   onAddTextRun,
+  onClearEvents,
+  presets,
+  onSavePreset,
+  onApplyPreset,
+  onDeletePreset,
 }: Props) {
   if (!state.isLoaded && !state.isLoading) return null;
 
@@ -83,6 +95,14 @@ export function Sidebar({
               onAddTextRun={onAddTextRun}
             />
             <ViewModelPanel properties={state.viewModelProps} onSetProp={onSetViewModelProp} />
+            <EventsPanel events={state.riveEvents} onClear={onClearEvents} />
+            <PresetsPanel
+              presets={presets}
+              state={state}
+              onSave={onSavePreset}
+              onApply={onApplyPreset}
+              onDelete={onDeletePreset}
+            />
             <ExportPanel state={state} />
           </>
         )}

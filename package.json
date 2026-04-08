@@ -1,6 +1,6 @@
 {
   "name": "rive-playground",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Inspect, control & export Rive .riv animations — CLI, MCP server, and visual playground",
   "type": "module",
   "main": "dist/mcp.js",
@@ -13,21 +13,34 @@
     "dev:cli": "tsx src/cli.ts",
     "start:mcp": "node dist/mcp.js",
     "start:cli": "node dist/cli.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@clack/prompts": "^1.1.0",
     "@modelcontextprotocol/sdk": "^1.12.0",
     "@rive-app/canvas-advanced": "^2.36.0",
+    "boxen": "^8.0.1",
     "chalk": "^5.3.0",
     "chokidar": "^3.6.0",
+    "cli-table3": "^0.6.5",
     "commander": "^12.1.0",
+    "figlet": "^1.11.0",
+    "figures": "^6.1.0",
     "glob": "^10.4.0",
+    "gradient-string": "^3.0.0",
+    "ora": "^9.3.0",
+    "yaml": "^2.8.3",
     "zod": "^3.23.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@vitest/coverage-v8": "^4.1.2",
     "tsx": "^4.0.0",
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "vitest": "^4.1.2"
   },
   "engines": {
     "node": ">=18.0.0"

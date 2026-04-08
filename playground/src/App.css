@@ -1028,3 +1028,68 @@
     border-top: 1px solid var(--border-subtle);
   }
 }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  max-width: 480px;
+  z-index: 9999;
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.toast-visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast-hidden  { opacity: 0; transform: translateX(-50%) translateY(8px); pointer-events: none; }
+.toast-error   { background: #450a0a; border: 1px solid #ef4444; color: #fca5a5; }
+.toast-warning { background: #451a03; border: 1px solid #f59e0b; color: #fde68a; }
+.toast-success { background: #14532d; border: 1px solid #22c55e; color: #bbf7d0; }
+.toast-icon    { font-size: 14px; flex-shrink: 0; }
+.toast-message { flex: 1; line-height: 1.4; }
+.toast-close   { background: none; border: none; color: inherit; opacity: 0.6; cursor: pointer; padding: 0; font-size: 12px; flex-shrink: 0; }
+.toast-close:hover { opacity: 1; }
+
+/* ===== EVENTS PANEL ===== */
+.events-badge { margin-left: auto; background: var(--accent-subtle, rgba(99,102,241,0.15)); color: var(--accent, #818cf8); border-radius: 999px; padding: 1px 6px; font-size: 10px; font-weight: 600; }
+.events-clear-btn { margin-left: 4px; background: none; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+.events-clear-btn:hover { color: var(--text-primary); background: var(--bg-hover, rgba(255,255,255,0.05)); }
+.events-body { max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.event-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid var(--border-subtle); }
+.event-row:last-child { border-bottom: none; }
+.event-ts { font-size: 10px; color: var(--text-muted); font-family: monospace; flex-shrink: 0; }
+.event-name { font-size: 12px; color: var(--text-primary); font-weight: 500; }
+.event-type-badge { font-size: 10px; padding: 1px 5px; border-radius: 3px; font-weight: 600; flex-shrink: 0; }
+.event-type-general { background: rgba(99,102,241,0.15); color: #818cf8; }
+.event-type-openUrl  { background: rgba(34,197,94,0.12); color: #4ade80; }
+.event-url { font-size: 10px; color: #38bdf8; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.event-url:hover { text-decoration: underline; }
+.event-props { display: flex; flex-wrap: wrap; gap: 4px; width: 100%; }
+.event-prop-chip { font-size: 10px; background: var(--bg-hover, rgba(255,255,255,0.05)); border-radius: 3px; padding: 1px 5px; color: var(--text-secondary); font-family: monospace; }
+
+/* ===== PRESETS PANEL ===== */
+.preset-save-form { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.preset-save-actions { display: flex; gap: 6px; }
+.preset-btn { background: var(--bg-hover, rgba(255,255,255,0.06)); border: 1px solid var(--border-subtle); color: var(--text-primary); font-size: 11px; padding: 4px 10px; border-radius: 5px; cursor: pointer; transition: background 0.15s; }
+.preset-btn:hover { background: var(--bg-surface2, rgba(255,255,255,0.1)); }
+.preset-btn-primary { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.4); color: #a5b4fc; }
+.preset-btn-primary:hover { background: rgba(99,102,241,0.3); }
+.preset-btn-full { width: 100%; justify-content: center; margin-bottom: 8px; text-align: center; }
+.preset-btn-apply { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: #4ade80; }
+.preset-btn-apply:hover { background: rgba(34,197,94,0.2); }
+.preset-btn-delete { background: none; border: none; color: var(--text-muted); padding: 4px 6px; }
+.preset-btn-delete:hover { color: #ef4444; }
+.preset-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border-subtle); }
+.preset-row:last-child { border-bottom: none; }
+.preset-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.preset-name { font-size: 12px; color: var(--text-primary); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.preset-meta { font-size: 10px; color: var(--text-muted); }
+.preset-actions { display: flex; gap: 4px; flex-shrink: 0; }

@@ -2,6 +2,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { createRequire } from "module";
+const _require = createRequire(import.meta.url);
+const _pkg = _require("../package.json") as { version: string };
 
 import { inspectRive, formatInspectOutput } from "./tools/inspect.js";
 import { scanDirectory, formatScanOutput } from "./tools/scan.js";
@@ -9,10 +12,14 @@ import { validateConfig, formatValidateOutput } from "./tools/validate.js";
 import { generateTypes } from "./tools/generateTypes.js";
 import { watchRiveFiles, formatDiff } from "./tools/watch.js";
 import { exportFields, formatFieldsOutput } from "./tools/exportFields.js";
+import { listAssets, formatAssetsOutput } from "./tools/listAssets.js";
+import { generateContract, validateContract, formatContractValidation, formatContractYaml } from "./tools/contract.js";
+import { generateMultiplatform } from "./tools/generateMultiplatform.js";
+import { compareRiveFiles, formatCompareOutput } from "./tools/compareFiles.js";
 
 const server = new McpServer({
   name: "rive-analyzer",
-  version: "1.0.0",
+  version: _pkg.version,
 });
 
 server.tool(
@@ -155,6 +162,72 @@ server.tool(
       format === "json"
         ? JSON.stringify(result, null, 2)
         : formatFieldsOutput(result);
+    return { content: [{ type: "text", text }] };
+  },
+);
+
+server.tool(
+  "list-rive-assets",
+  {
+    filePath: z.string().describe("Path to .riv file"),
+    format: z.enum(["json", "text"]).optional().default("text").describe("Output format"),
+  },
+  async ({ filePath, format }) => {
+    const result = await listAssets(filePath);
+    const text = format === "json" ? JSON.stringify(result, null, 2) : formatAssetsOutput(result);
+    return { content: [{ type: "text", text }] };
+  },
+);
+
+server.tool(
+  "generate-rive-contract",
+  {
+    rivFile: z.string().describe("Path to .riv file"),
+    outputFile: z.string().optional().describe("Output .yaml file path (prints if omitted)"),
+  },
+  async ({ rivFile, outputFile }) => {
+    const out = await generateContract(rivFile, outputFile);
+    return { content: [{ type: "text", text: out }] };
+  },
+);
+
+server.tool(
+  "validate-rive-contract",
+  {
+    rivFile: z.string().describe("Path to .riv file"),
+    contractFile: z.string().describe("Path to .rive-contract.yaml file"),
+    format: z.enum(["json", "text"]).optional().default("text"),
+  },
+  async ({ rivFile, contractFile, format }) => {
+    const result = await validateContract(rivFile, contractFile);
+    const text = format === "json" ? JSON.stringify(result, null, 2) : formatContractValidation(result);
+    return { content: [{ type: "text", text }] };
+  },
+);
+
+server.tool(
+  "generate-platform-types",
+  {
+    rivFile: z.string().describe("Path to .riv file"),
+    target: z.enum(["swift", "kotlin", "json-schema", "zod", "dart"]).describe("Target platform"),
+    outputFile: z.string().optional().describe("Output file path (prints if omitted)"),
+  },
+  async ({ rivFile, target, outputFile }) => {
+    const out = await generateMultiplatform(rivFile, target, outputFile);
+    return { content: [{ type: "text", text: out }] };
+  },
+);
+
+server.tool(
+  "compare-rive-files",
+  {
+    fileA: z.string().describe("Path to first .riv file (baseline)"),
+    fileB: z.string().describe("Path to second .riv file (updated)"),
+    format: z.enum(["json", "text"]).optional().default("text"),
+  },
+  async ({ fileA, fileB, format }) => {
+    const result = await compareRiveFiles(fileA, fileB);
+    const text = format === "json" ? JSON.stringify(result, null, 2) : formatCompareOutput(result);
     return { content: [{ type: "text", text }] };
   },
 );

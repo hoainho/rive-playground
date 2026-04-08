@@ -2,6 +2,8 @@ import { readFileSync } from "fs";
 import { resolve } from "path";
 import { parseRiveFile } from "../parser/riveParser.js";
 import type { ValidationResult, ValidationItem } from "../parser/types.js";
+import chalk from "chalk";
+import { colors, sym, brand, divider, sectionLabel } from "../ui/theme.js";
 
 function extractStringValues(source: string): string[] {
   const matches = source.match(/"([^"\\]+)"/g) ?? [];
@@ -124,30 +126,54 @@ export async function validateConfig(
 
 export function formatValidateOutput(result: ValidationResult): string {
   const lines: string[] = [];
-  const statusIcon = (s: string) =>
-    s === "match" ? "✓" : s === "missing_in_riv" ? "✗" : "~";
 
-  lines.push(`Rive file: ${result.rivFile}`);
-  lines.push(`Config file: ${result.configFile}`);
+  const statusIcon = (s: string) => {
+    if (s === "match") return sym.ok;
+    if (s === "missing_in_riv") return sym.fail;
+    return sym.warn;
+  };
+  const statusLabel = (s: string) => {
+    if (s === "match") return colors.success("match");
+    if (s === "missing_in_riv") return colors.error("missing in .riv");
+    if (s === "extra_in_config") return colors.warning("extra in config");
+    return colors.muted(s);
+  };
+
   lines.push("");
+  lines.push(divider(58));
+  lines.push("  " + brand("VALIDATE"));
+  lines.push("  " + colors.secondary("riv:    ") + " " + colors.muted(result.rivFile));
+  lines.push("  " + colors.secondary("config: ") + " " + colors.muted(result.configFile));
+  lines.push(divider(58));
 
   const renderChecks = (label: string, items: ValidationItem[]) => {
     if (items.length === 0) return;
-    lines.push(`${label}:`);
+    lines.push("");
+    lines.push("  " + sectionLabel(label.toUpperCase(), 54));
     for (const item of items) {
       lines.push(
-        `  ${statusIcon(item.status)} "${item.value}" — ${item.status}`,
+        "  " + statusIcon(item.status) +
+        "  " + chalk.hex("#E2E8F0")('"' + item.value + '"') +
+        "  " + colors.muted("—") +
+        "  " + statusLabel(item.status) +
+        (item.location ? "  " + colors.muted("in " + item.location) : "")
       );
     }
-    lines.push("");
   };
 
   renderChecks("Artboards", result.artboardChecks);
   renderChecks("State Machines", result.stateMachineChecks);
   renderChecks("Inputs", result.inputChecks);
 
-  lines.push(result.isValid ? "✓ VALID" : "✗ INVALID");
-  lines.push(result.summary);
+  lines.push("");
+  lines.push(divider(58));
+
+  const verdict = result.isValid
+    ? "  " + sym.ok + "  " + chalk.hex("#BBF7D0").bold("VALID") + "  " + colors.muted(result.summary)
+    : "  " + sym.fail + "  " + chalk.hex("#FCA5A5").bold("INVALID") + "  " + colors.error(result.summary);
+  lines.push(verdict);
+  lines.push(divider(58));
+  lines.push("");
 
   return lines.join("\n");
 }

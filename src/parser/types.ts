@@ -15,11 +15,16 @@ export interface StateMachineMetadata {
   inputs: SMInputMetadata[];
 }
 
+export type AnimationLoopType = "oneShot" | "loop" | "pingPong";
+
 export interface AnimationMetadata {
   name: string;
-  duration: number; // seconds
+  duration: number;
   fps: number;
-  workDuration: number; // frames
+  workDuration: number;
+  loopType: AnimationLoopType;
+  workStart: number;
+  workEnd: number;
 }
 
 export interface ArtboardMetadata {
