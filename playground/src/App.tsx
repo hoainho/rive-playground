@@ -1,12 +1,18 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useRivePlayground } from "./hooks/useRivePlayground";
+import { usePresets } from "./hooks/usePresets";
 import { FileLoader } from "./components/FileLoader";
 import { RiveCanvas } from "./components/RiveCanvas";
 import { Sidebar } from "./components/Sidebar";
 import { PlaybackPanel } from "./components/panels/PlaybackPanel";
+import { Toast } from "./components/Toast";
+import logoUrl from "/logo.svg";
+
 import "./App.css";
 
 export default function App() {
+  const [dismissedError, setDismissedError] = useState<string | null>(null);
+
   const {
     state,
     riveSource,
@@ -25,7 +31,42 @@ export default function App() {
     playAnimation,
     pauseAnimation,
     resetAnimation,
+    clearEvents,
+    applyPreset,
   } = useRivePlayground();
+
+  const { presets, savePreset, deletePreset } = usePresets();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const fileUrl = params.get("file");
+    if (fileUrl) loadFromUrl(fileUrl);
+  }, [loadFromUrl]);
+
+  useEffect(() => {
+    if (!state.isLoaded) return;
+    const url = new URL(window.location.href);
+    if (state.selectedArtboard) url.searchParams.set("artboard", state.selectedArtboard);
+    if (state.selectedStateMachine) url.searchParams.set("sm", state.selectedStateMachine);
+    window.history.replaceState(null, "", url.toString());
+  }, [state.isLoaded, state.selectedArtboard, state.selectedStateMachine]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (!state.isLoaded) return;
+      if (e.code === "Space") { e.preventDefault(); playAnimation(); }
+      if (e.code === "KeyR" && !e.metaKey && !e.ctrlKey) { e.preventDefault(); resetAnimation(); }
+      if ((e.metaKey || e.ctrlKey) && e.code === "KeyS") {
+        e.preventDefault();
+        const name = `Preset ${presets.length + 1}`;
+        savePreset(name, state);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [state, presets.length, playAnimation, resetAnimation, savePreset]);
 
   const showWelcome = !state.isLoaded && !state.isLoading && !state.fileName;
 
@@ -58,13 +99,20 @@ export default function App() {
     [loadFromBuffer],
   );
 
+  const toastMessage = state.error && state.error !== dismissedError ? state.error : null;
+
   return (
     <div className="app">
+      <Toast
+        message={toastMessage}
+        type="error"
+        onDismiss={() => setDismissedError(state.error)}
+      />
       {showWelcome ? (
         <div className="welcome-screen">
           <div className="welcome-card">
             <div className="welcome-brand">
-              <img src="/logo.svg" className="welcome-logo" alt="Rive Playground" />
+              <img src={logoUrl} className="welcome-logo" alt="Rive Playground" />
               <h1 className="welcome-title">Rive Playground</h1>
               <p className="welcome-subtitle">
                 Inspect, control, and export Rive animations in real-time
@@ -136,11 +184,16 @@ export default function App() {
               state={state}
               onSelectArtboard={selectArtboard}
               onSelectSM={selectStateMachine}
-          onSetInput={setSMInputValue}
-            onFireTrigger={fireSMTrigger}
-            onSetViewModelProp={setViewModelProp}
-            onSetTextRun={setTextRunValue}
-            onAddTextRun={addTextRunName}
+              onSetInput={setSMInputValue}
+              onFireTrigger={fireSMTrigger}
+              onSetViewModelProp={setViewModelProp}
+              onSetTextRun={setTextRunValue}
+              onAddTextRun={addTextRunName}
+              onClearEvents={clearEvents}
+              presets={presets}
+              onSavePreset={(name) => savePreset(name, state)}
+              onApplyPreset={applyPreset}
+              onDeletePreset={deletePreset}
             />
           </main>
         </>
