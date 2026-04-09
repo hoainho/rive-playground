@@ -47,6 +47,7 @@ export function useRivePlayground() {
     viewModelProps: Array<{ path: string; type: string; value: unknown }>;
     textRuns: Array<{ name: string; value: string }>;
   } | null>(null);
+  const isApplyingPresetRef = useRef(false);
 
   const clearLoadTimeout = useCallback(() => {
     if (loadTimeoutRef.current) {
@@ -240,7 +241,10 @@ export function useRivePlayground() {
 
       const pending = pendingPresetRef.current;
       if (pending) {
+        if (smInputs.length === 0) return;
+
         pendingPresetRef.current = null;
+        isApplyingPresetRef.current = false;
         const rive = riveRef.current;
         if (rive) {
           try {
@@ -329,13 +333,34 @@ export function useRivePlayground() {
           });
         }
       } catch {}
-      const readyTimer = setTimeout(extractLiveData, 500);
-      return () => clearTimeout(readyTimer);
+      if (pendingPresetRef.current) {
+        let retryTimer: ReturnType<typeof setTimeout> | null = null;
+        const scheduleExtractWithRetry = (attempts: number) => {
+          const delay = attempts === 0 ? 300 : 200;
+          retryTimer = setTimeout(() => {
+            extractLiveData();
+            if (pendingPresetRef.current) {
+              if (attempts < 10) {
+                scheduleExtractWithRetry(attempts + 1);
+              } else {
+                pendingPresetRef.current = null;
+                isApplyingPresetRef.current = false;
+              }
+            }
+          }, delay);
+        };
+        scheduleExtractWithRetry(0);
+        return () => { if (retryTimer) clearTimeout(retryTimer); };
+      } else {
+        const readyTimer = setTimeout(extractLiveData, 500);
+        return () => clearTimeout(readyTimer);
+      }
     },
     [clearLoadTimeout, extractLiveData, addRiveEvent],
   );
 
   useEffect(() => {
+    if (isApplyingPresetRef.current) return;
     if (riveRef.current && state.isLoaded && state.selectedStateMachine) {
       const timer = setTimeout(extractLiveData, 500);
       return () => clearTimeout(timer);
@@ -573,10 +598,9 @@ export function useRivePlayground() {
       preset.artboard !== currentArtboard ||
       preset.stateMachine !== currentSM;
 
-    if (rive) {
+    if (rive && !needsRemount) {
       try {
-        const smName = needsRemount ? preset.stateMachine : currentSM;
-        const rawInputs = rive.stateMachineInputs(smName || currentSM);
+        const rawInputs = rive.stateMachineInputs(currentSM);
         for (const inp of preset.inputs) {
           const found = rawInputs?.find((i) => i.name === inp.name);
           if (found) found.value = inp.value as number | boolean;
@@ -617,18 +641,15 @@ export function useRivePlayground() {
         viewModelProps: applyVmOverrides(prev.viewModelProps),
       }));
 
-      if (needsRemount) {
-        riveRef.current = null;
-        setResetCounter((c) => c + 1);
-      } else {
-        pendingPresetRef.current = null;
-      }
+      pendingPresetRef.current = null;
     } else {
+      isApplyingPresetRef.current = true;
       setState((prev) => ({
         ...prev,
         selectedArtboard: preset.artboard,
         selectedStateMachine: preset.stateMachine,
         smInputs: [],
+        textRuns: [],
       }));
       riveRef.current = null;
       setResetCounter((c) => c + 1);

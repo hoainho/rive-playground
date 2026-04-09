@@ -23,6 +23,11 @@ export function ImageControl({ name, imageUrl, onSetUrl, onSetFile }: Props) {
     };
   }, []);
 
+  useEffect(() => {
+    setPreviewSrc(imageUrl || undefined);
+    setUrlInput(imageUrl || "");
+  }, [imageUrl]);
+
   const handleUrlSubmit = useCallback(() => {
     const trimmed = urlInput.trim();
     if (!trimmed) return;

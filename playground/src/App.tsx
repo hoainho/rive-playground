@@ -2,6 +2,7 @@ import { useCallback, useState, useEffect } from "react";
 import { useRivePlayground } from "./hooks/useRivePlayground";
 import { usePresets } from "./hooks/usePresets";
 import { FileLoader } from "./components/FileLoader";
+import { FileOpener } from "./components/FileOpener";
 import { RiveCanvas } from "./components/RiveCanvas";
 import { Sidebar } from "./components/Sidebar";
 import { PlaybackPanel } from "./components/panels/PlaybackPanel";
@@ -129,14 +130,13 @@ export default function App() {
         <>
           <header className="app-header">
             <h1 className="app-title">Rive Playground</h1>
-            {state.isLoaded && (
-              <div className="header-loader">
-                <FileLoader
-                  onLoadBuffer={loadFromBuffer}
-                  onLoadUrl={loadFromUrl}
-                  isLoading={state.isLoading}
-                />
-              </div>
+            {state.fileName && (
+              <FileOpener
+                fileName={state.fileName}
+                onLoadBuffer={loadFromBuffer}
+                onLoadUrl={loadFromUrl}
+                isLoading={state.isLoading}
+              />
             )}
           </header>
 
