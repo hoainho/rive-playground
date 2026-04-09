@@ -7,6 +7,8 @@ const BADGE_COLORS: Record<string, string> = {
   enum: "#06b6d4",
   image: "#f97316",
   viewModel: "#a78bfa",
+  list: "#7c3aed",
+  listItem: "#a78bfa",
 };
 
 interface Props {
