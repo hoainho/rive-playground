@@ -996,6 +996,77 @@
   overflow: hidden;
 }
 
+.vm-list-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+.vm-list-empty {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 4px 0;
+  font-style: italic;
+}
+
+.vm-list-add-btn {
+  margin-top: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-family: var(--font);
+  background: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+  text-align: left;
+  align-self: flex-start;
+}
+
+.vm-list-add-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.vm-list-item {
+  gap: 2px;
+}
+
+.vm-list-item-actions {
+  display: flex;
+  gap: 2px;
+  margin-left: 4px;
+}
+
+.vm-list-item-btn {
+  padding: 1px 5px;
+  font-size: 10px;
+  font-family: var(--font);
+  background: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1.4;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.vm-list-item-btn:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.vm-list-item-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.vm-list-item-remove:hover:not(:disabled) {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
 .image-control {
   flex-direction: column;
   align-items: stretch;
